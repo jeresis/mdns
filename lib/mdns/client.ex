@@ -126,16 +126,11 @@ defmodule Mdns.Client do
   end
 
   def handle_device({:dns_rr, _d, :txt, _id, _, _, data, _, _, _}, device) do
-    %Device{
-      device
-      | :payload =>
-          Enum.reduce(data, %{}, fn kv, acc ->
-            case String.split(to_string(kv), "=", parts: 2) do
-              [k, v] -> Map.put(acc, String.downcase(k), String.trim(v))
-              _ -> nil
-            end
-          end)
-    }
+    %Device{device | :payload => parse_txt_data(data)}
+  end
+
+  def handle_device(%DNS.Resource{:type => :txt, :data => data}, device) do
+    %Device{device | :payload => parse_txt_data(data)}
   end
 
   def handle_device(%DNS.Resource{}, device) do
@@ -148,6 +143,15 @@ defmodule Mdns.Client do
 
   def handle_device({:dns_rr_opt, _, _, _, _, _, _, _}, device) do
     device
+  end
+
+  def parse_txt_data(data) do
+    Enum.reduce(data, %{}, fn kv, acc ->
+      case String.split(to_string(kv), "=", parts: 2) do
+        [k, v] -> Map.put(acc, String.downcase(k), String.trim(v))
+        _ -> nil
+      end
+    end)
   end
 
   def get_device(ip, record, state) do
