@@ -84,11 +84,16 @@ defmodule Mdns.Client do
   end
 
   def handle_packet(ip, packet, state) do
-    record = DNS.Record.decode(packet)
+    try do
+      record = DNS.Record.decode(packet)
 
-    case record.header.qr do
-      true -> handle_response(ip, record, state)
-      _ -> state
+      case record.header.qr do
+        true -> handle_response(ip, record, state)
+        _ -> state
+      end
+    catch
+      :error, {:badmatch, {:error, :fmt}} ->
+        Logger.error("DNS packet decode error: #{inspect ip} #{inspect packet}")
     end
   end
 
