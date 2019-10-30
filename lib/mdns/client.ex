@@ -94,6 +94,7 @@ defmodule Mdns.Client do
     catch
       :error, {:badmatch, {:error, :fmt}} ->
         Logger.error("DNS packet decode error: #{inspect ip} #{inspect packet}")
+        state
     end
   end
 
